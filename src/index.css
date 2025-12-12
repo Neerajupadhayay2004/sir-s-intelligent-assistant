@@ -2,95 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import "@fontsource/orbitron/400.css";
+@import "@fontsource/orbitron/500.css";
+@import "@fontsource/orbitron/700.css";
+@import "@fontsource/orbitron/900.css";
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* JARVIS Dark Theme - Iron Man Inspired */
+    --background: 220 25% 6%;
+    --foreground: 190 100% 85%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 220 30% 8%;
+    --card-foreground: 190 100% 85%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 220 30% 10%;
+    --popover-foreground: 190 100% 85%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Cyan/Electric Blue - Primary JARVIS Color */
+    --primary: 190 100% 50%;
+    --primary-foreground: 220 25% 6%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Arc Reactor Orange Glow */
+    --secondary: 35 100% 55%;
+    --secondary-foreground: 220 25% 6%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted Holographic */
+    --muted: 220 20% 15%;
+    --muted-foreground: 190 50% 60%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Bright Cyan */
+    --accent: 185 100% 45%;
+    --accent-foreground: 220 25% 6%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 190 40% 25%;
+    --input: 190 40% 20%;
+    --ring: 190 100% 50%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* JARVIS Custom Colors */
+    --jarvis-cyan: 190 100% 50%;
+    --jarvis-cyan-glow: 190 100% 70%;
+    --jarvis-cyan-dim: 190 60% 30%;
+    --jarvis-orange: 35 100% 55%;
+    --jarvis-orange-glow: 30 100% 65%;
+    --jarvis-dark: 220 25% 6%;
+    --jarvis-surface: 220 30% 10%;
+    --jarvis-line: 190 80% 40%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Gradients */
+    --gradient-jarvis: linear-gradient(135deg, hsl(190 100% 50% / 0.2), hsl(185 100% 45% / 0.1));
+    --gradient-arc: linear-gradient(135deg, hsl(35 100% 55% / 0.3), hsl(30 100% 65% / 0.1));
+    --gradient-glow: radial-gradient(circle, hsl(190 100% 50% / 0.4) 0%, transparent 70%);
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Shadows */
+    --shadow-jarvis: 0 0 30px hsl(190 100% 50% / 0.3), 0 0 60px hsl(190 100% 50% / 0.1);
+    --shadow-arc: 0 0 40px hsl(35 100% 55% / 0.4), 0 0 80px hsl(35 100% 55% / 0.2);
+    --shadow-glow-sm: 0 0 10px hsl(190 100% 50% / 0.5);
+    --shadow-glow-md: 0 0 20px hsl(190 100% 50% / 0.4);
+    --shadow-glow-lg: 0 0 40px hsl(190 100% 50% / 0.3);
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    /* Typography */
+    --font-jarvis: 'Orbitron', system-ui, sans-serif;
 
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 220 25% 8%;
+    --sidebar-foreground: 190 100% 85%;
+    --sidebar-primary: 190 100% 50%;
+    --sidebar-primary-foreground: 220 25% 6%;
+    --sidebar-accent: 220 20% 15%;
+    --sidebar-accent-foreground: 190 100% 85%;
+    --sidebar-border: 190 40% 20%;
+    --sidebar-ring: 190 100% 50%;
   }
 }
 
@@ -100,6 +86,177 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-jarvis);
+  }
+
+  /* Custom scrollbar for JARVIS theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--jarvis-dark));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--jarvis-cyan-dim));
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--jarvis-cyan));
+  }
+}
+
+@layer components {
+  /* JARVIS Glow Effects */
+  .jarvis-glow {
+    box-shadow: var(--shadow-jarvis);
+  }
+
+  .jarvis-glow-text {
+    text-shadow: 0 0 10px hsl(var(--jarvis-cyan) / 0.8), 0 0 20px hsl(var(--jarvis-cyan) / 0.5), 0 0 40px hsl(var(--jarvis-cyan) / 0.3);
+  }
+
+  .arc-glow {
+    box-shadow: var(--shadow-arc);
+  }
+
+  .arc-glow-text {
+    text-shadow: 0 0 10px hsl(var(--jarvis-orange) / 0.8), 0 0 20px hsl(var(--jarvis-orange) / 0.5);
+  }
+
+  /* Scan line effect */
+  .scan-lines::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      hsl(var(--jarvis-cyan) / 0.03) 2px,
+      hsl(var(--jarvis-cyan) / 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Hexagon pattern */
+  .hex-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300d4ff' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Glass morphism */
+  .glass-jarvis {
+    background: hsl(var(--jarvis-surface) / 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--jarvis-cyan) / 0.2);
+  }
+
+  /* Pulse animation */
+  @keyframes jarvis-pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.02);
+    }
+  }
+
+  .jarvis-pulse {
+    animation: jarvis-pulse 2s ease-in-out infinite;
+  }
+
+  /* Arc reactor spin */
+  @keyframes arc-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .arc-spin {
+    animation: arc-spin 20s linear infinite;
+  }
+
+  /* Scanning animation */
+  @keyframes scan {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+
+  .scan-animation::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(var(--jarvis-cyan)), transparent);
+    animation: scan 3s linear infinite;
+  }
+
+  /* Voice wave animation */
+  @keyframes voice-wave {
+    0%, 100% {
+      transform: scaleY(0.3);
+    }
+    50% {
+      transform: scaleY(1);
+    }
+  }
+
+  .voice-wave {
+    animation: voice-wave 0.5s ease-in-out infinite;
+  }
+
+  /* Typing cursor */
+  @keyframes blink {
+    0%, 50% {
+      opacity: 1;
+    }
+    51%, 100% {
+      opacity: 0;
+    }
+  }
+
+  .typing-cursor::after {
+    content: '|';
+    animation: blink 1s step-end infinite;
+    color: hsl(var(--jarvis-cyan));
+  }
+
+  /* Circle decorative elements */
+  @keyframes rotate-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .rotate-slow {
+    animation: rotate-slow 30s linear infinite;
+  }
+
+  .rotate-slow-reverse {
+    animation: rotate-slow 25s linear infinite reverse;
+  }
+}
+
+@layer utilities {
+  .font-jarvis {
+    font-family: var(--font-jarvis);
   }
 }
