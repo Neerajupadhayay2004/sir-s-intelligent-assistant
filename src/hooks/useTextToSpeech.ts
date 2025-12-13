@@ -1,7 +1,9 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export const useTextToSpeech = () => {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [rate, setRate] = useState(1.0);
+  const [pitch, setPitch] = useState(0.9);
 
   const speak = useCallback((text: string) => {
     // Cancel any ongoing speech
@@ -27,12 +29,12 @@ export const useTextToSpeech = () => {
       utteranceRef.current.voice = preferredVoice;
     }
 
-    utteranceRef.current.rate = 1.0;
-    utteranceRef.current.pitch = 0.9;
+    utteranceRef.current.rate = rate;
+    utteranceRef.current.pitch = pitch;
     utteranceRef.current.volume = 1.0;
 
     window.speechSynthesis.speak(utteranceRef.current);
-  }, []);
+  }, [rate, pitch]);
 
   const stop = useCallback(() => {
     window.speechSynthesis.cancel();
@@ -46,5 +48,7 @@ export const useTextToSpeech = () => {
     speak,
     stop,
     isSpeaking,
+    setRate,
+    setPitch,
   };
 };
