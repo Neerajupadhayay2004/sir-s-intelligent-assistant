@@ -1,7 +1,6 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Volume2, VolumeX, Zap } from "lucide-react";
-import { useState } from "react";
+import { Trash2, Volume2, VolumeX, Zap, Plus, MessageSquare } from "lucide-react";
 import HolographicOrb from "@/components/HolographicOrb";
 import ChatMessage from "@/components/ChatMessage";
 import JarvisInput from "@/components/JarvisInput";
@@ -9,16 +8,40 @@ import StatusIndicator from "@/components/StatusIndicator";
 import HUDOverlay from "@/components/HUDOverlay";
 import FloatingParticles from "@/components/FloatingParticles";
 import { useJarvisChat } from "@/hooks/useJarvisChat";
+import { useConversationMemory } from "@/hooks/useConversationMemory";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Index = () => {
-  const { messages, isLoading, sendMessage, clearMessages } = useJarvisChat();
+  const { savedMessages, isInitialized, saveMessage, clearConversation, startNewConversation } = useConversationMemory();
+  
+  const { messages, isLoading, sendMessage, clearMessages, setInitialMessages, actionResult } = useJarvisChat({
+    onMessageSaved: saveMessage,
+    initialMessages: savedMessages,
+  });
+  
   const { speak, stop } = useTextToSpeech();
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<string>("");
+
+  // Load saved messages when initialized
+  useEffect(() => {
+    if (isInitialized && savedMessages.length > 0) {
+      setInitialMessages(savedMessages);
+    }
+  }, [isInitialized, savedMessages, setInitialMessages]);
+
+  // Show action result toast
+  useEffect(() => {
+    if (actionResult) {
+      toast.success(actionResult, {
+        duration: 3000,
+      });
+    }
+  }, [actionResult]);
 
   const handleVoiceTranscript = useCallback(
     (text: string) => {
@@ -57,11 +80,23 @@ const Index = () => {
     setVoiceEnabled(!voiceEnabled);
   };
 
+  const handleClearMessages = async () => {
+    clearMessages();
+    await clearConversation();
+    toast.success("Conversation cleared");
+  };
+
+  const handleNewConversation = async () => {
+    clearMessages();
+    await startNewConversation();
+    toast.success("New conversation started");
+  };
+
   const quickCommands = [
-    { text: "What can you do?", icon: "🤖" },
-    { text: "Tell me a joke", icon: "😄" },
-    { text: "System status", icon: "📊" },
+    { text: "Kya haal hai?", icon: "👋" },
+    { text: "Open YouTube", icon: "📺" },
     { text: "Help me code", icon: "💻" },
+    { text: "Tell me a joke", icon: "😄" },
   ];
 
   return (
@@ -149,6 +184,16 @@ const Index = () => {
             <Button
               variant="ghost"
               size="icon"
+              onClick={handleNewConversation}
+              className="w-8 h-8 md:w-9 md:h-9 text-muted-foreground hover:text-jarvis-cyan"
+              title="New Conversation"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleVoice}
               className="w-8 h-8 md:w-9 md:h-9 text-muted-foreground hover:text-jarvis-cyan"
             >
@@ -162,8 +207,9 @@ const Index = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={clearMessages}
+              onClick={handleClearMessages}
               className="w-8 h-8 md:w-9 md:h-9 text-muted-foreground hover:text-destructive"
+              title="Clear Conversation"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
