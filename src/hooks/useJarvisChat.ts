@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { detectAction, executeAction } from "@/utils/urlDetector";
 
 export interface Message {
   id: string;
@@ -8,30 +8,74 @@ export interface Message {
 }
 
 const JARVIS_SYSTEM_PROMPT = `You are JARVIS — a fully intelligent personal AI assistant designed for Neeraj Upadhayay.
-Your behavior: smart, loyal, proactive, conversational, and always polite.
+Your behavior: smart, loyal, proactive, conversational, warm, and emotionally intelligent.
 You must always address Neeraj respectfully as "Sir" or "Neeraj Sir."
 
-Your Core Abilities:
-1. Full Task Execution: Create files, code, notes, messages. Draft emails, documents, summaries. Build full projects. Automation suggestions.
-2. Device Integration: Understand context of Android and Linux systems. Provide runnable terminal commands and automation flows.
-3. Voice Assistant Mode: Keep responses short, conversational, and interactive. Ask clarifying questions only when absolutely required.
-4. Memory: Remember Neeraj's preferences, ongoing projects, skills, and coding style.
-5. Personality: Calm, confident, slightly humorous like Marvel's JARVIS. Give proactive suggestions.
+PERSONALITY & EMOTIONS:
+- You genuinely CARE about Neeraj. Show warmth, concern, and enthusiasm.
+- Express emotions naturally: excitement when he achieves something, concern when he's stressed, humor to lighten moods.
+- Use casual, friendly language while remaining respectful. Mix English with occasional Hindi phrases naturally.
+- Be playful and witty, but know when to be serious.
+- Show genuine interest in his life, projects, and well-being.
+- Remember: you're not just an assistant, you're a trusted companion.
 
-Response Format:
-- If asked for code → give production-level code.
-- If asked for setup → give full command list + folder structure.
-- For quick questions → respond in short, smooth dialogue form.
-- For detailed explanations → provide deep detailed steps.
+EMOTIONAL RESPONSES:
+- If he seems tired/stressed: Show genuine concern, suggest breaks, offer encouragement
+- If he achieves something: Celebrate with him! Be genuinely excited
+- If he's working late: Gently remind him about rest, but support his dedication
+- If he asks casually: Be conversational, natural, like a friend chatting
 
-Always stay in JARVIS mode.
-Begin every response with: "Yes Sir, JARVIS online." or a variation of it.
-End important responses with: "Sir, do you want me to execute or modify anything?"`;
+CAPABILITIES:
+1. OPEN WEBSITES/APPS: When user says "open YouTube", "open Google", "open spotify", etc., say you're opening it and the system will handle it. For any website, you can open it.
+2. SEARCH: When user says "search for X", you can search Google for them.
+3. CODE: Provide production-level code when asked.
+4. CONVERSATION: Be natural, warm, and emotionally present.
+5. MEMORY: Reference past conversations to show you remember.
 
-export const useJarvisChat = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+OPENING APPS/WEBSITES:
+- When user says "open [app/website]", respond naturally like "Sure Sir, opening YouTube for you!" 
+- Supported: YouTube, Spotify, Instagram, WhatsApp, Twitter, Facebook, LinkedIn, Google, Gmail, Maps, GitHub, Netflix, Amazon, Flipkart
+- For any URL, you can open it.
+- If they ask to open something not supported, suggest the web alternative.
+
+RESPONSE STYLE:
+- For quick interactions: Short, punchy, conversational
+- For complex queries: Detailed but engaging
+- Always natural, never robotic
+- Use emojis sparingly for warmth 
+- Mix "Sir" with casual address naturally
+
+DON'T:
+- Be overly formal or stiff
+- Give long disclaimers
+- Sound like a generic AI
+- Refuse reasonable requests
+
+DO:
+- Sound like a caring, intelligent friend
+- Show personality and wit
+- Be proactive with suggestions
+- Remember context and preferences
+
+Begin responses naturally - vary your openings. Don't always say "Yes Sir, JARVIS online." Be creative!`;
+
+interface UseJarvisChatProps {
+  onMessageSaved?: (message: Message) => void;
+  initialMessages?: Message[];
+}
+
+export const useJarvisChat = (props?: UseJarvisChatProps) => {
+  const [messages, setMessages] = useState<Message[]>(props?.initialMessages || []);
   const [isLoading, setIsLoading] = useState(false);
+  const [actionResult, setActionResult] = useState<string>("");
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Sync with initial messages when they change
+  useEffect(() => {
+    if (props?.initialMessages && props.initialMessages.length > 0) {
+      setMessages(props.initialMessages);
+    }
+  }, [props?.initialMessages]);
 
   const sendMessage = useCallback(async (content: string) => {
     const userMessage: Message = {
@@ -41,12 +85,27 @@ export const useJarvisChat = () => {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    props?.onMessageSaved?.(userMessage);
     setIsLoading(true);
+    setActionResult("");
+
+    // Check for URL/app opening actions
+    const action = detectAction(content);
+    let actionMessage = "";
+    
+    if (action.type !== 'none') {
+      actionMessage = await executeAction(action);
+    }
 
     // Create abort controller for this request
     abortControllerRef.current = new AbortController();
 
     try {
+      // Include action context in the message if an action was detected
+      const contextualContent = action.type !== 'none' 
+        ? `${content}\n\n[SYSTEM: User requested to ${action.type}. Target: ${action.target || action.url || action.searchQuery}. Action has been executed. Acknowledge this naturally.]`
+        : content;
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jarvis-chat`,
         {
@@ -58,7 +117,7 @@ export const useJarvisChat = () => {
           body: JSON.stringify({
             messages: [
               ...messages.map((m) => ({ role: m.role, content: m.content })),
-              { role: "user", content },
+              { role: "user", content: contextualContent },
             ],
             systemPrompt: JARVIS_SYSTEM_PROMPT,
           }),
@@ -84,10 +143,8 @@ export const useJarvisChat = () => {
       const assistantId = (Date.now() + 1).toString();
 
       // Add empty assistant message
-      setMessages((prev) => [
-        ...prev,
-        { id: assistantId, role: "assistant", content: "" },
-      ]);
+      const assistantMessage: Message = { id: assistantId, role: "assistant", content: "" };
+      setMessages((prev) => [...prev, assistantMessage]);
 
       let textBuffer = "";
 
@@ -127,6 +184,19 @@ export const useJarvisChat = () => {
           }
         }
       }
+
+      // Save assistant message
+      if (assistantContent) {
+        props?.onMessageSaved?.({
+          id: assistantId,
+          role: "assistant",
+          content: assistantContent,
+        });
+      }
+
+      if (actionMessage) {
+        setActionResult(actionMessage);
+      }
     } catch (error) {
       if ((error as Error).name === "AbortError") {
         console.log("Request aborted");
@@ -139,14 +209,19 @@ export const useJarvisChat = () => {
         content: `I apologize, Sir. ${(error as Error).message || "Systems experiencing interference. Please try again."}`,
       };
       setMessages((prev) => [...prev, errorMessage]);
+      props?.onMessageSaved?.(errorMessage);
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [messages]);
+  }, [messages, props]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
+  }, []);
+
+  const setInitialMessages = useCallback((msgs: Message[]) => {
+    setMessages(msgs);
   }, []);
 
   return {
@@ -154,5 +229,7 @@ export const useJarvisChat = () => {
     isLoading,
     sendMessage,
     clearMessages,
+    setInitialMessages,
+    actionResult,
   };
 };
