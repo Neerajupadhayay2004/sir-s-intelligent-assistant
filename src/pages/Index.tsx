@@ -1,12 +1,13 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Volume2, VolumeX, Zap, Plus, MessageSquare } from "lucide-react";
+import { Trash2, Volume2, VolumeX, Zap, Plus, Settings } from "lucide-react";
 import HolographicOrb from "@/components/HolographicOrb";
 import ChatMessage from "@/components/ChatMessage";
 import JarvisInput from "@/components/JarvisInput";
 import StatusIndicator from "@/components/StatusIndicator";
 import HUDOverlay from "@/components/HUDOverlay";
 import FloatingParticles from "@/components/FloatingParticles";
+import { SettingsPanel, defaultSettings, JarvisSettings } from "@/components/SettingsPanel";
 import { useJarvisChat } from "@/hooks/useJarvisChat";
 import { useConversationMemory } from "@/hooks/useConversationMemory";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
@@ -22,8 +23,13 @@ const Index = () => {
     initialMessages: savedMessages,
   });
   
-  const { speak, stop } = useTextToSpeech();
+  const { speak, stop, setRate, setPitch } = useTextToSpeech();
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<JarvisSettings>(() => {
+    const saved = localStorage.getItem('jarvis-settings');
+    return saved ? JSON.parse(saved) : defaultSettings;
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<string>("");
 
@@ -78,6 +84,34 @@ const Index = () => {
       stop();
     }
     setVoiceEnabled(!voiceEnabled);
+    setSettings(prev => ({ ...prev, voiceEnabled: !voiceEnabled }));
+  };
+
+  const handleSettingsChange = (newSettings: JarvisSettings) => {
+    setSettings(newSettings);
+    localStorage.setItem('jarvis-settings', JSON.stringify(newSettings));
+    setVoiceEnabled(newSettings.voiceEnabled);
+    setRate(newSettings.voiceSpeed);
+    setPitch(newSettings.voicePitch);
+  };
+
+  const handleExportConversation = () => {
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      messages: messages.map(m => ({
+        role: m.role,
+        content: m.content,
+        timestamp: m.id,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `jarvis-conversation-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Conversation exported successfully");
   };
 
   const handleClearMessages = async () => {
@@ -94,9 +128,9 @@ const Index = () => {
 
   const quickCommands = [
     { text: "Kya haal hai?", icon: "👋" },
+    { text: "Play music on Spotify", icon: "🎵" },
+    { text: "Search Google for recipes", icon: "🔍" },
     { text: "Open YouTube", icon: "📺" },
-    { text: "Help me code", icon: "💻" },
-    { text: "Tell me a joke", icon: "😄" },
   ];
 
   return (
@@ -207,6 +241,16 @@ const Index = () => {
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setSettingsOpen(true)}
+              className="w-8 h-8 md:w-9 md:h-9 text-muted-foreground hover:text-jarvis-cyan"
+              title="Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleClearMessages}
               className="w-8 h-8 md:w-9 md:h-9 text-muted-foreground hover:text-destructive"
               title="Clear Conversation"
@@ -215,6 +259,16 @@ const Index = () => {
             </Button>
           </div>
         </motion.header>
+
+        {/* Settings Panel */}
+        <SettingsPanel
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          settings={settings}
+          onSettingsChange={handleSettingsChange}
+          onClearConversation={handleClearMessages}
+          onExportConversation={handleExportConversation}
+        />
 
         {/* Chat area */}
         <div className="flex-1 overflow-y-auto py-2 md:py-4 space-y-3 md:space-y-4 scrollbar-thin">
