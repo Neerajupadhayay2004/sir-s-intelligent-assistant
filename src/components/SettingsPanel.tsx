@@ -17,14 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ThemeType, themeNames, themes } from "@/hooks/useTheme";
 
 export interface JarvisSettings {
   voiceEnabled: boolean;
   voiceSpeed: number;
   voicePitch: number;
   language: string;
-  theme: 'dark' | 'light' | 'system';
-  accentColor: 'cyan' | 'orange' | 'purple' | 'green';
+  colorTheme: ThemeType;
   notificationsEnabled: boolean;
   soundEffects: boolean;
   autoSpeak: boolean;
@@ -36,8 +36,7 @@ const defaultSettings: JarvisSettings = {
   voiceSpeed: 1,
   voicePitch: 1,
   language: 'en-US',
-  theme: 'dark',
-  accentColor: 'cyan',
+  colorTheme: 'jarvis',
   notificationsEnabled: true,
   soundEffects: true,
   autoSpeak: true,
@@ -51,6 +50,7 @@ interface SettingsPanelProps {
   onSettingsChange: (settings: JarvisSettings) => void;
   onClearConversation: () => void;
   onExportConversation: () => void;
+  onThemeChange?: (theme: ThemeType) => void;
 }
 
 const SettingsPanel = ({
@@ -60,6 +60,7 @@ const SettingsPanel = ({
   onSettingsChange,
   onClearConversation,
   onExportConversation,
+  onThemeChange,
 }: SettingsPanelProps) => {
   const [localSettings, setLocalSettings] = useState<JarvisSettings>(settings);
 
@@ -74,13 +75,19 @@ const SettingsPanel = ({
     const newSettings = { ...localSettings, [key]: value };
     setLocalSettings(newSettings);
     onSettingsChange(newSettings);
+
+    // Handle theme change
+    if (key === 'colorTheme' && onThemeChange) {
+      onThemeChange(value as ThemeType);
+    }
   };
 
-  const accentColors = [
-    { value: 'cyan', label: 'Cyan', color: 'hsl(190 100% 50%)' },
-    { value: 'orange', label: 'Orange', color: 'hsl(35 100% 55%)' },
-    { value: 'purple', label: 'Purple', color: 'hsl(270 100% 60%)' },
-    { value: 'green', label: 'Green', color: 'hsl(150 100% 45%)' },
+  const themeOptions: Array<{ value: ThemeType; label: string; colors: string[] }> = [
+    { value: 'jarvis', label: 'JARVIS', colors: ['hsl(190 100% 50%)', 'hsl(35 100% 55%)'] },
+    { value: 'ironman', label: 'Iron Man', colors: ['hsl(0 85% 55%)', 'hsl(35 100% 60%)'] },
+    { value: 'ultron', label: 'Ultron', colors: ['hsl(0 0% 60%)', 'hsl(0 85% 50%)'] },
+    { value: 'vision', label: 'Vision', colors: ['hsl(280 80% 60%)', 'hsl(55 90% 55%)'] },
+    { value: 'friday', label: 'F.R.I.D.A.Y', colors: ['hsl(210 100% 55%)', 'hsl(280 60% 55%)'] },
   ];
 
   return (
@@ -102,16 +109,16 @@ const SettingsPanel = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-jarvis-cyan/20 z-50 shadow-2xl"
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-primary/20 z-50 shadow-2xl"
             style={{
-              boxShadow: "-10px 0 50px hsl(190 100% 50% / 0.1)",
+              boxShadow: "-10px 0 50px hsl(var(--primary) / 0.1)",
             }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 md:p-6 border-b border-jarvis-cyan/20">
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-primary/20">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-jarvis-cyan/10 flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-jarvis-cyan" />
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">Settings</h2>
@@ -122,7 +129,7 @@ const SettingsPanel = ({
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="text-muted-foreground hover:text-jarvis-cyan"
+                className="text-muted-foreground hover:text-primary"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -134,7 +141,7 @@ const SettingsPanel = ({
                 {/* Voice Settings */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Volume2 className="w-4 h-4 text-jarvis-cyan" />
+                    <Volume2 className="w-4 h-4 text-primary" />
                     <h3 className="text-sm font-medium text-foreground">Voice Settings</h3>
                   </div>
                   
@@ -164,7 +171,7 @@ const SettingsPanel = ({
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm text-muted-foreground">Speech Speed</Label>
-                        <span className="text-xs text-jarvis-cyan">{localSettings.voiceSpeed.toFixed(1)}x</span>
+                        <span className="text-xs text-primary">{localSettings.voiceSpeed.toFixed(1)}x</span>
                       </div>
                       <Slider
                         value={[localSettings.voiceSpeed]}
@@ -179,7 +186,7 @@ const SettingsPanel = ({
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm text-muted-foreground">Voice Pitch</Label>
-                        <span className="text-xs text-jarvis-cyan">{localSettings.voicePitch.toFixed(1)}</span>
+                        <span className="text-xs text-primary">{localSettings.voicePitch.toFixed(1)}</span>
                       </div>
                       <Slider
                         value={[localSettings.voicePitch]}
@@ -193,12 +200,12 @@ const SettingsPanel = ({
                   </div>
                 </div>
 
-                <Separator className="bg-jarvis-cyan/10" />
+                <Separator className="bg-primary/10" />
 
                 {/* Language Settings */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-jarvis-cyan" />
+                    <Globe className="w-4 h-4 text-primary" />
                     <h3 className="text-sm font-medium text-foreground">Language</h3>
                   </div>
                   
@@ -207,7 +214,7 @@ const SettingsPanel = ({
                       value={localSettings.language}
                       onValueChange={(value) => updateSetting('language', value)}
                     >
-                      <SelectTrigger className="w-full bg-muted/50 border-jarvis-cyan/20">
+                      <SelectTrigger className="w-full bg-muted/50 border-primary/20">
                         <SelectValue placeholder="Select language" />
                       </SelectTrigger>
                       <SelectContent>
@@ -222,31 +229,45 @@ const SettingsPanel = ({
                   </div>
                 </div>
 
-                <Separator className="bg-jarvis-cyan/10" />
+                <Separator className="bg-primary/10" />
 
                 {/* Appearance */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Palette className="w-4 h-4 text-jarvis-cyan" />
+                    <Palette className="w-4 h-4 text-primary" />
                     <h3 className="text-sm font-medium text-foreground">Appearance</h3>
                   </div>
                   
                   <div className="space-y-4 pl-6">
-                    <div className="space-y-2">
-                      <Label className="text-sm text-muted-foreground">Accent Color</Label>
-                      <div className="flex gap-2">
-                        {accentColors.map((color) => (
+                    <div className="space-y-3">
+                      <Label className="text-sm text-muted-foreground">Color Theme</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {themeOptions.map((theme) => (
                           <button
-                            key={color.value}
-                            onClick={() => updateSetting('accentColor', color.value as JarvisSettings['accentColor'])}
-                            className={`w-8 h-8 rounded-full border-2 transition-all ${
-                              localSettings.accentColor === color.value
-                                ? 'border-foreground scale-110'
-                                : 'border-transparent hover:scale-105'
-                            }`}
-                            style={{ backgroundColor: color.color }}
-                            title={color.label}
-                          />
+                            key={theme.value}
+                            onClick={() => updateSetting('colorTheme', theme.value)}
+                            className={`
+                              flex items-center gap-2 p-3 rounded-lg border transition-all
+                              ${localSettings.colorTheme === theme.value
+                                ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
+                                : 'border-muted hover:border-primary/30 hover:bg-muted/50'
+                              }
+                            `}
+                          >
+                            <div className="flex gap-1">
+                              {theme.colors.map((color, i) => (
+                                <div
+                                  key={i}
+                                  className="w-4 h-4 rounded-full"
+                                  style={{ 
+                                    backgroundColor: color,
+                                    boxShadow: `0 0 10px ${color}`,
+                                  }}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs font-medium">{theme.label}</span>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -264,12 +285,12 @@ const SettingsPanel = ({
                   </div>
                 </div>
 
-                <Separator className="bg-jarvis-cyan/10" />
+                <Separator className="bg-primary/10" />
 
                 {/* Notifications */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-jarvis-cyan" />
+                    <Bell className="w-4 h-4 text-primary" />
                     <h3 className="text-sm font-medium text-foreground">Notifications</h3>
                   </div>
                   
@@ -287,19 +308,19 @@ const SettingsPanel = ({
                   </div>
                 </div>
 
-                <Separator className="bg-jarvis-cyan/10" />
+                <Separator className="bg-primary/10" />
 
                 {/* Data & Privacy */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-jarvis-cyan" />
+                    <Shield className="w-4 h-4 text-primary" />
                     <h3 className="text-sm font-medium text-foreground">Data & Privacy</h3>
                   </div>
                   
                   <div className="space-y-3 pl-6">
                     <Button
                       variant="outline"
-                      className="w-full justify-start gap-2 border-jarvis-cyan/20 hover:bg-jarvis-cyan/10"
+                      className="w-full justify-start gap-2 border-primary/20 hover:bg-primary/10"
                       onClick={onExportConversation}
                     >
                       <Download className="w-4 h-4" />
@@ -318,9 +339,9 @@ const SettingsPanel = ({
                 </div>
 
                 {/* About */}
-                <div className="mt-8 p-4 rounded-lg bg-muted/30 border border-jarvis-cyan/10">
+                <div className="mt-8 p-4 rounded-lg bg-muted/30 border border-primary/10">
                   <div className="flex items-center gap-2 mb-2">
-                    <Zap className="w-4 h-4 text-jarvis-orange" />
+                    <Zap className="w-4 h-4 text-secondary" />
                     <span className="text-xs text-muted-foreground">JARVIS v2.0</span>
                   </div>
                   <p className="text-xs text-muted-foreground">

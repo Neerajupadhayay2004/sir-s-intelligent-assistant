@@ -1,14 +1,16 @@
 import { useState, KeyboardEvent } from "react";
 import { motion } from "framer-motion";
-import { Send, Mic, MicOff, Loader2 } from "lucide-react";
+import { Send, Mic, MicOff, Loader2, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import VoiceWave from "./VoiceWave";
+import { FileUpload } from "./FileUpload";
 
 interface JarvisInputProps {
   onSend: (message: string) => void;
   isLoading: boolean;
   isListening: boolean;
   onToggleVoice: () => void;
+  onFileSelect?: (file: File) => void;
 }
 
 const JarvisInput = ({
@@ -16,8 +18,10 @@ const JarvisInput = ({
   isLoading,
   isListening,
   onToggleVoice,
+  onFileSelect,
 }: JarvisInputProps) => {
   const [input, setInput] = useState("");
+  const [showFileUpload, setShowFileUpload] = useState(false);
 
   const handleSend = () => {
     if (input.trim() && !isLoading) {
@@ -33,12 +37,25 @@ const JarvisInput = ({
     }
   };
 
+  const handleFileSelect = (file: File) => {
+    onFileSelect?.(file);
+    // Add file name to input
+    setInput((prev) => prev + (prev ? ' ' : '') + `[File: ${file.name}]`);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="relative"
     >
+      {/* File Upload Panel */}
+      <FileUpload
+        isOpen={showFileUpload}
+        onClose={() => setShowFileUpload(false)}
+        onFileSelect={handleFileSelect}
+      />
+
       {/* Voice wave indicator */}
       {isListening && (
         <motion.div
@@ -55,7 +72,7 @@ const JarvisInput = ({
       <motion.div
         className="absolute inset-0 rounded-2xl opacity-50"
         style={{
-          background: "radial-gradient(ellipse at center, hsl(190 100% 50% / 0.15) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse at center, hsl(var(--primary) / 0.15) 0%, transparent 70%)",
           filter: "blur(20px)",
         }}
         animate={{
@@ -73,7 +90,7 @@ const JarvisInput = ({
           className="absolute inset-0 rounded-2xl pointer-events-none"
           style={{
             border: "1px solid transparent",
-            background: `linear-gradient(90deg, hsl(190 100% 50% / 0.3), hsl(35 100% 55% / 0.3), hsl(190 100% 50% / 0.3)) border-box`,
+            background: `linear-gradient(90deg, hsl(var(--primary) / 0.3), hsl(var(--secondary) / 0.3), hsl(var(--primary) / 0.3)) border-box`,
             WebkitMask: "linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)",
             WebkitMaskComposite: "xor",
             maskComposite: "exclude",
@@ -87,6 +104,20 @@ const JarvisInput = ({
           }}
         />
 
+        {/* File attachment button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowFileUpload(!showFileUpload)}
+          className={`rounded-xl h-10 w-10 md:h-12 md:w-12 transition-all duration-300 ${
+            showFileUpload
+              ? "bg-primary/20 text-primary"
+              : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+          }`}
+        >
+          <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
+        </Button>
+
         {/* Voice button */}
         <Button
           variant="ghost"
@@ -94,16 +125,16 @@ const JarvisInput = ({
           onClick={onToggleVoice}
           className={`rounded-xl h-10 w-10 md:h-12 md:w-12 transition-all duration-300 relative ${
             isListening
-              ? "bg-jarvis-cyan/20 text-jarvis-cyan"
-              : "text-muted-foreground hover:text-jarvis-cyan hover:bg-jarvis-cyan/10"
+              ? "bg-primary/20 text-primary"
+              : "text-muted-foreground hover:text-primary hover:bg-primary/10"
           }`}
           style={{
-            boxShadow: isListening ? "0 0 20px hsl(190 100% 50% / 0.4)" : "none",
+            boxShadow: isListening ? "0 0 20px hsl(var(--primary) / 0.4)" : "none",
           }}
         >
           {isListening && (
             <motion.div
-              className="absolute inset-0 rounded-xl border border-jarvis-cyan/50"
+              className="absolute inset-0 rounded-xl border border-primary/50"
               animate={{ scale: [1, 1.2, 1], opacity: [1, 0, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
@@ -132,9 +163,9 @@ const JarvisInput = ({
           size="icon"
           onClick={handleSend}
           disabled={!input.trim() || isLoading}
-          className="rounded-xl h-10 w-10 md:h-12 md:w-12 bg-jarvis-cyan/20 text-jarvis-cyan hover:bg-jarvis-cyan/30 hover:text-jarvis-cyan-glow transition-all duration-300 disabled:opacity-30"
+          className="rounded-xl h-10 w-10 md:h-12 md:w-12 bg-primary/20 text-primary hover:bg-primary/30 transition-all duration-300 disabled:opacity-30"
           style={{
-            boxShadow: input.trim() && !isLoading ? "0 0 15px hsl(190 100% 50% / 0.3)" : "none",
+            boxShadow: input.trim() && !isLoading ? "0 0 15px hsl(var(--primary) / 0.3)" : "none",
           }}
         >
           {isLoading ? (
