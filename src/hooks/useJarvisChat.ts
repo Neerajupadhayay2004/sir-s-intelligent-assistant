@@ -5,6 +5,7 @@ export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  imageUrl?: string; // For displaying images in chat
 }
 
 const JARVIS_SYSTEM_PROMPT = `You are JARVIS — a fully intelligent personal AI assistant designed for Neeraj Upadhayay.
@@ -64,6 +65,10 @@ interface UseJarvisChatProps {
   initialMessages?: Message[];
 }
 
+interface SendMessageOptions {
+  imageData?: string; // Base64 image data
+}
+
 export const useJarvisChat = (props?: UseJarvisChatProps) => {
   const [messages, setMessages] = useState<Message[]>(props?.initialMessages || []);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,11 +82,12 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
     }
   }, [props?.initialMessages]);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, options?: SendMessageOptions) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content,
+      imageUrl: options?.imageData, // Store image for display
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -102,9 +108,13 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
 
     try {
       // Include action context in the message if an action was detected
-      const contextualContent = action.type !== 'none' 
-        ? `${content}\n\n[SYSTEM: User requested to ${action.type}. Target: ${action.target || action.url || action.searchQuery}. Action has been executed. Acknowledge this naturally.]`
-        : content;
+      let contextualContent = content;
+      if (action.type !== 'none') {
+        contextualContent = `${content}\n\n[SYSTEM: User requested to ${action.type}. Target: ${action.target || action.url || action.searchQuery}. Action has been executed. Acknowledge this naturally.]`;
+      }
+      if (options?.imageData) {
+        contextualContent = `${content}\n\n[SYSTEM: User has uploaded an image. Analyze it thoroughly and describe what you see. Be detailed and helpful.]`;
+      }
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jarvis-chat`,
@@ -120,6 +130,7 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
               { role: "user", content: contextualContent },
             ],
             systemPrompt: JARVIS_SYSTEM_PROMPT,
+            imageData: options?.imageData, // Pass image data to edge function
           }),
           signal: abortControllerRef.current.signal,
         }

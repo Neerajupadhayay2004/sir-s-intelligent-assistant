@@ -6,11 +6,11 @@ import VoiceWave from "./VoiceWave";
 import { FileUpload } from "./FileUpload";
 
 interface JarvisInputProps {
-  onSend: (message: string) => void;
+  onSend: (message: string, imageData?: string) => void;
   isLoading: boolean;
   isListening: boolean;
   onToggleVoice: () => void;
-  onFileSelect?: (file: File) => void;
+  onFileSelect?: (file: File, base64?: string) => void;
 }
 
 const JarvisInput = ({
@@ -22,11 +22,13 @@ const JarvisInput = ({
 }: JarvisInputProps) => {
   const [input, setInput] = useState("");
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [pendingImageData, setPendingImageData] = useState<string | null>(null);
 
   const handleSend = () => {
     if (input.trim() && !isLoading) {
-      onSend(input.trim());
+      onSend(input.trim(), pendingImageData || undefined);
       setInput("");
+      setPendingImageData(null);
     }
   };
 
@@ -37,10 +39,13 @@ const JarvisInput = ({
     }
   };
 
-  const handleFileSelect = (file: File) => {
-    onFileSelect?.(file);
-    // Add file name to input
-    setInput((prev) => prev + (prev ? ' ' : '') + `[File: ${file.name}]`);
+  const handleFileSelect = (file: File, base64Data?: string) => {
+    // If it's an image, store the base64 for sending with next message
+    if (file.type.startsWith('image/') && base64Data) {
+      setPendingImageData(base64Data);
+      setInput((prev) => prev || "What's in this image?");
+    }
+    onFileSelect?.(file, base64Data);
   };
 
   return (

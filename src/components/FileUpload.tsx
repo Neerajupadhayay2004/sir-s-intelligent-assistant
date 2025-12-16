@@ -1,19 +1,18 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, File, Image, X, FileText, Loader2 } from 'lucide-react';
+import { Upload, File, Image, X, FileText, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface FileUploadProps {
-  onFileSelect: (file: File, url?: string) => void;
+  onFileSelect: (file: File, base64Data?: string) => void;
   onClose: () => void;
   isOpen: boolean;
 }
 
 export const FileUpload = ({ onFileSelect, onClose, isOpen }: FileUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,12 +39,21 @@ export const FileUpload = ({ onFileSelect, onClose, isOpen }: FileUploadProps) =
   };
 
   const processFile = (file: File) => {
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File too large. Maximum size is 10MB.');
+      return;
+    }
+
     setSelectedFile(file);
     
-    // Create preview for images
+    // Create preview and base64 for images
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target?.result as string);
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        setPreview(base64);
+      };
       reader.readAsDataURL(file);
     } else {
       setPreview(null);
@@ -55,17 +63,23 @@ export const FileUpload = ({ onFileSelect, onClose, isOpen }: FileUploadProps) =
   const handleUpload = async () => {
     if (!selectedFile) return;
 
-    setIsUploading(true);
+    setIsProcessing(true);
     try {
-      // For now, just pass the file to parent - can be extended to upload to storage
-      onFileSelect(selectedFile);
-      toast.success(`File "${selectedFile.name}" ready to send`);
+      // For images, pass the base64 data for AI analysis
+      const isImage = selectedFile.type.startsWith('image/');
+      if (isImage && preview) {
+        onFileSelect(selectedFile, preview);
+        toast.success(`Image ready for AI analysis!`);
+      } else {
+        onFileSelect(selectedFile);
+        toast.success(`File "${selectedFile.name}" attached`);
+      }
       resetState();
       onClose();
     } catch (error) {
       toast.error('Failed to process file');
     } finally {
-      setIsUploading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -134,6 +148,10 @@ export const FileUpload = ({ onFileSelect, onClose, isOpen }: FileUploadProps) =
                 <p className="text-sm text-muted-foreground text-center">
                   Drag & drop or click to upload
                 </p>
+                <div className="flex items-center gap-1 text-xs text-primary/80">
+                  <Sparkles className="w-3 h-3" />
+                  <span>Images will be analyzed by AI</span>
+                </div>
                 <p className="text-xs text-muted-foreground/60">
                   Images, PDFs, Documents (Max 10MB)
                 </p>
@@ -183,13 +201,18 @@ export const FileUpload = ({ onFileSelect, onClose, isOpen }: FileUploadProps) =
                 </Button>
                 <Button
                   onClick={handleUpload}
-                  disabled={isUploading}
+                  disabled={isProcessing}
                   className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
-                  {isUploading ? (
+                  {isProcessing ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Uploading...
+                      Processing...
+                    </>
+                  ) : selectedFile?.type.startsWith('image/') ? (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Analyze Image
                     </>
                   ) : (
                     'Send File'
