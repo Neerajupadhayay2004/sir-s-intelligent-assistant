@@ -102,9 +102,23 @@ const Index = () => {
     setTheme(theme);
   };
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = (file: File, base64Data?: string) => {
     setSelectedFile(file);
-    toast.success(`File "${file.name}" attached`);
+    if (base64Data) {
+      // If it's an image, show analysis prompt
+      const isImage = file.type.startsWith('image/');
+      if (isImage) {
+        toast.success(`Image ready for analysis. Type your question about the image.`);
+      } else {
+        toast.success(`File "${file.name}" attached`);
+      }
+    }
+  };
+
+  // Send message with image if one is selected
+  const handleSendMessage = async (content: string, imageData?: string) => {
+    await sendMessage(content, imageData ? { imageData } : undefined);
+    setSelectedFile(null);
   };
 
   const handleExportConversation = () => {
@@ -374,6 +388,7 @@ const Index = () => {
                   <ChatMessage
                     role={message.role}
                     content={message.content}
+                    imageUrl={message.imageUrl}
                     isStreaming={
                       isLoading &&
                       message.role === "assistant" &&
@@ -390,7 +405,7 @@ const Index = () => {
         {/* Input area */}
         <div className="py-3 md:py-6 pb-safe">
           <JarvisInput
-            onSend={sendMessage}
+            onSend={handleSendMessage}
             isLoading={isLoading}
             isListening={isListening}
             onToggleVoice={toggleListening}

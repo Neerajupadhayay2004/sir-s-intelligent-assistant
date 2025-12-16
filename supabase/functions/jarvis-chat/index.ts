@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, systemPrompt } = await req.json();
+    const { messages, systemPrompt, imageData } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -21,6 +21,34 @@ serve(async (req) => {
     }
 
     console.log("JARVIS processing request with", messages.length, "messages");
+    if (imageData) {
+      console.log("Image analysis requested");
+    }
+
+    // Format messages for the API - handle image content
+    const formattedMessages = messages.map((msg: any) => {
+      // If message has image content, format it properly for vision
+      if (msg.content && Array.isArray(msg.content)) {
+        return msg;
+      }
+      // If there's image data attached to the last user message
+      if (msg.role === "user" && imageData && msg === messages[messages.length - 1]) {
+        return {
+          role: "user",
+          content: [
+            { type: "text", text: msg.content },
+            {
+              type: "image_url",
+              image_url: { url: imageData }
+            }
+          ]
+        };
+      }
+      return msg;
+    });
+
+    // Use gemini-2.5-pro for vision tasks (better at image analysis)
+    const model = imageData ? "google/gemini-2.5-pro" : "google/gemini-2.5-flash";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -29,10 +57,10 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model,
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...formattedMessages,
         ],
         stream: true,
       }),
