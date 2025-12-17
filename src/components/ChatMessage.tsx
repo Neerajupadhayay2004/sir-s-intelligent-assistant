@@ -1,15 +1,32 @@
 import { motion } from "framer-motion";
-import { Bot, User, Image as ImageIcon } from "lucide-react";
+import { Bot, User, Image as ImageIcon, Sparkles, Download } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
   isStreaming?: boolean;
   imageUrl?: string;
+  generatedImage?: string;
 }
 
-const ChatMessage = ({ role, content, isStreaming = false, imageUrl }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, isStreaming = false, imageUrl, generatedImage }: ChatMessageProps) => {
   const isJarvis = role === "assistant";
+
+  const handleDownload = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `jarvis-generated-${Date.now()}.png`;
+      link.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
 
   return (
     <motion.div
@@ -62,7 +79,7 @@ const ChatMessage = ({ role, content, isStreaming = false, imageUrl }: ChatMessa
           }}
         />
         
-        {/* Image display */}
+        {/* Uploaded image display */}
         {imageUrl && (
           <motion.div 
             className="mb-3 relative"
@@ -88,8 +105,59 @@ const ChatMessage = ({ role, content, isStreaming = false, imageUrl }: ChatMessa
             isJarvis ? "text-foreground" : "text-secondary"
           } ${isStreaming ? "typing-cursor" : ""}`}
         >
-          {content}
+          {content.replace(/\n\n\[Generated Image\]$/, '')}
         </p>
+
+        {/* AI Generated image display */}
+        {generatedImage && (
+          <motion.div 
+            className="mt-4 relative"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, type: "spring" }}
+          >
+            <div className="relative rounded-xl overflow-hidden border-2 border-primary/30 group">
+              {/* Glowing border effect */}
+              <motion.div
+                className="absolute inset-0 rounded-xl pointer-events-none"
+                style={{
+                  boxShadow: "0 0 30px hsl(var(--primary) / 0.4), inset 0 0 20px hsl(var(--primary) / 0.2)",
+                }}
+                animate={{
+                  boxShadow: [
+                    "0 0 30px hsl(var(--primary) / 0.4), inset 0 0 20px hsl(var(--primary) / 0.2)",
+                    "0 0 50px hsl(var(--primary) / 0.6), inset 0 0 30px hsl(var(--primary) / 0.3)",
+                    "0 0 30px hsl(var(--primary) / 0.4), inset 0 0 20px hsl(var(--primary) / 0.2)",
+                  ],
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
+              
+              <img 
+                src={generatedImage} 
+                alt="AI Generated image" 
+                className="w-full max-h-80 object-contain rounded-xl"
+              />
+              
+              {/* Label */}
+              <div className="absolute top-2 left-2 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm flex items-center gap-2">
+                <Sparkles className="w-3 h-3 text-primary-foreground" />
+                <span className="text-xs font-medium text-primary-foreground">AI Generated</span>
+              </div>
+
+              {/* Download button */}
+              <Button
+                size="sm"
+                variant="secondary"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => handleDownload(generatedImage)}
+              >
+                <Download className="w-3 h-3 mr-1" />
+                Save
+              </Button>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
 
       {!isJarvis && (
