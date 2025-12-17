@@ -76,22 +76,50 @@ interface SendMessageOptions {
   imageData?: string; // Base64 image data
 }
 
-// Detect if user wants to generate an image
-const detectImageGeneration = (content: string): string | null => {
+// Available art styles
+const ART_STYLES = [
+  'photorealistic', 'anime', 'oil-painting', 'cyberpunk', 
+  'watercolor', '3d-render', 'sketch', 'fantasy', 'pop-art', 'vintage'
+];
+
+interface ImageGenerationResult {
+  prompt: string;
+  style: string;
+}
+
+// Detect if user wants to generate an image and extract style
+const detectImageGeneration = (content: string): ImageGenerationResult | null => {
   const patterns = [
-    /generate (?:an? )?image (?:of |about |showing )?(.+)/i,
-    /create (?:an? )?image (?:of |about |showing )?(.+)/i,
-    /make (?:an? )?(?:picture|image|photo) (?:of |about |showing )?(.+)/i,
-    /draw (?:an? )?(.+)/i,
-    /(?:picture|image|photo) of (.+)/i,
-    /imagine (.+)/i,
-    /visualize (.+)/i,
+    /generate (?:an? )?(?:(anime|cyberpunk|oil[- ]?painting|watercolor|3d[- ]?render|sketch|fantasy|pop[- ]?art|vintage|photorealistic) )?image (?:of |about |showing )?(.+)/i,
+    /create (?:an? )?(?:(anime|cyberpunk|oil[- ]?painting|watercolor|3d[- ]?render|sketch|fantasy|pop[- ]?art|vintage|photorealistic) )?image (?:of |about |showing )?(.+)/i,
+    /make (?:an? )?(?:(anime|cyberpunk|oil[- ]?painting|watercolor|3d[- ]?render|sketch|fantasy|pop[- ]?art|vintage|photorealistic) )?(?:picture|image|photo) (?:of |about |showing )?(.+)/i,
+    /draw (?:an? )?(?:(anime|cyberpunk|oil[- ]?painting|watercolor|3d[- ]?render|sketch|fantasy|pop[- ]?art|vintage|photorealistic) )?(.+)/i,
+    /(?:(anime|cyberpunk|oil[- ]?painting|watercolor|3d[- ]?render|sketch|fantasy|pop[- ]?art|vintage|photorealistic) )?(?:picture|image|photo) of (.+)/i,
+    /imagine (?:an? )?(?:(anime|cyberpunk|oil[- ]?painting|watercolor|3d[- ]?render|sketch|fantasy|pop[- ]?art|vintage|photorealistic) )?(.+)/i,
   ];
+
+  // Also check for style mentioned anywhere in the prompt
+  const stylePattern = /(?:in|as|style:|using) (anime|cyberpunk|oil[- ]?painting|watercolor|3d[- ]?render|sketch|fantasy|pop[- ]?art|vintage|photorealistic)(?: style)?/i;
 
   for (const pattern of patterns) {
     const match = content.match(pattern);
     if (match) {
-      return match[1].trim();
+      let style = match[1]?.toLowerCase().replace(/[- ]/g, '-') || 'photorealistic';
+      let prompt = match[2]?.trim() || match[1]?.trim() || '';
+      
+      // Check if style is mentioned elsewhere in the prompt
+      const styleMatch = content.match(stylePattern);
+      if (styleMatch) {
+        style = styleMatch[1].toLowerCase().replace(/[- ]/g, '-');
+        prompt = prompt.replace(stylePattern, '').trim();
+      }
+      
+      // Normalize style names
+      if (style === 'oil-painting' || style === 'oilpainting') style = 'oil-painting';
+      if (style === '3d-render' || style === '3drender') style = '3d-render';
+      if (style === 'pop-art' || style === 'popart') style = 'pop-art';
+      
+      return { prompt, style };
     }
   }
   return null;
@@ -111,7 +139,7 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
     }
   }, [props?.initialMessages]);
 
-  const generateImage = async (prompt: string): Promise<string | null> => {
+  const generateImage = async (imageRequest: ImageGenerationResult): Promise<string | null> => {
     try {
       setIsGeneratingImage(true);
       const response = await fetch(
@@ -122,7 +150,10 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ prompt }),
+          body: JSON.stringify({ 
+            prompt: imageRequest.prompt, 
+            style: imageRequest.style 
+          }),
         }
       );
 
@@ -186,7 +217,8 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
         contextualContent = `${content}\n\n[SYSTEM: User has uploaded an image. Analyze it thoroughly and describe what you see. Be detailed and helpful.]`;
       }
       if (imagePrompt) {
-        contextualContent = `${content}\n\n[SYSTEM: User wants to generate an image of "${imagePrompt}". Acknowledge that you're generating it for them with enthusiasm. The image will appear after your message.]`;
+        const styleLabel = imagePrompt.style.replace('-', ' ');
+        contextualContent = `${content}\n\n[SYSTEM: User wants to generate a ${styleLabel} style image of "${imagePrompt.prompt}". Acknowledge that you're generating it for them with enthusiasm. Mention the style you're using. The image will appear after your message.]`;
       }
 
       const response = await fetch(

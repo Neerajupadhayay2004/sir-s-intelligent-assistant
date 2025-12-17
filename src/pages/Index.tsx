@@ -154,8 +154,8 @@ const Index = () => {
 
   const quickCommands = [
     { text: "Kya haal hai?", icon: "👋" },
-    { text: "Generate an image of a futuristic city", icon: "🎨" },
-    { text: "Play music on Spotify", icon: "🎵" },
+    { text: "Generate a cyberpunk image of a neon city", icon: "🌃" },
+    { text: "Draw an anime girl with flowers", icon: "🎨" },
     { text: "Open YouTube", icon: "📺" },
   ];
 
