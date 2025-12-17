@@ -6,6 +6,7 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   imageUrl?: string; // For displaying images in chat
+  generatedImage?: string; // For AI-generated images
 }
 
 const JARVIS_SYSTEM_PROMPT = `You are JARVIS — a fully intelligent personal AI assistant designed for Neeraj Upadhayay.
@@ -32,12 +33,18 @@ CAPABILITIES:
 3. CODE: Provide production-level code when asked.
 4. CONVERSATION: Be natural, warm, and emotionally present.
 5. MEMORY: Reference past conversations to show you remember.
+6. IMAGE GENERATION: When user says "generate an image of...", "create an image...", "make a picture of...", acknowledge that you're generating it.
 
 OPENING APPS/WEBSITES:
 - When user says "open [app/website]", respond naturally like "Sure Sir, opening YouTube for you!" 
 - Supported: YouTube, Spotify, Instagram, WhatsApp, Twitter, Facebook, LinkedIn, Google, Gmail, Maps, GitHub, Netflix, Amazon, Flipkart
 - For any URL, you can open it.
 - If they ask to open something not supported, suggest the web alternative.
+
+IMAGE GENERATION:
+- When user asks to generate/create/make an image, respond with enthusiasm
+- Example: "Absolutely Sir! I'm generating that image for you right now. This will just take a moment..."
+- Be creative in your acknowledgment
 
 RESPONSE STYLE:
 - For quick interactions: Short, punchy, conversational
@@ -69,9 +76,31 @@ interface SendMessageOptions {
   imageData?: string; // Base64 image data
 }
 
+// Detect if user wants to generate an image
+const detectImageGeneration = (content: string): string | null => {
+  const patterns = [
+    /generate (?:an? )?image (?:of |about |showing )?(.+)/i,
+    /create (?:an? )?image (?:of |about |showing )?(.+)/i,
+    /make (?:an? )?(?:picture|image|photo) (?:of |about |showing )?(.+)/i,
+    /draw (?:an? )?(.+)/i,
+    /(?:picture|image|photo) of (.+)/i,
+    /imagine (.+)/i,
+    /visualize (.+)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match) {
+      return match[1].trim();
+    }
+  }
+  return null;
+};
+
 export const useJarvisChat = (props?: UseJarvisChatProps) => {
   const [messages, setMessages] = useState<Message[]>(props?.initialMessages || []);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [actionResult, setActionResult] = useState<string>("");
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -81,6 +110,44 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
       setMessages(props.initialMessages);
     }
   }, [props?.initialMessages]);
+
+  const generateImage = async (prompt: string): Promise<string | null> => {
+    try {
+      setIsGeneratingImage(true);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ prompt }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Image generation failed:", response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      if (data.output) {
+        // Handle different output formats
+        if (typeof data.output === "string") {
+          return data.output;
+        } else if (Array.isArray(data.output) && data.output[0]) {
+          return data.output[0];
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error("Image generation error:", error);
+      return null;
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   const sendMessage = useCallback(async (content: string, options?: SendMessageOptions) => {
     const userMessage: Message = {
@@ -94,6 +161,9 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
     props?.onMessageSaved?.(userMessage);
     setIsLoading(true);
     setActionResult("");
+
+    // Check for image generation request
+    const imagePrompt = detectImageGeneration(content);
 
     // Check for URL/app opening actions
     const action = detectAction(content);
@@ -114,6 +184,9 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
       }
       if (options?.imageData) {
         contextualContent = `${content}\n\n[SYSTEM: User has uploaded an image. Analyze it thoroughly and describe what you see. Be detailed and helpful.]`;
+      }
+      if (imagePrompt) {
+        contextualContent = `${content}\n\n[SYSTEM: User wants to generate an image of "${imagePrompt}". Acknowledge that you're generating it for them with enthusiasm. The image will appear after your message.]`;
       }
 
       const response = await fetch(
@@ -196,6 +269,22 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
         }
       }
 
+      // Generate image if requested
+      if (imagePrompt) {
+        const generatedImageUrl = await generateImage(imagePrompt);
+        if (generatedImageUrl) {
+          // Update the assistant message with the generated image
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId 
+                ? { ...m, generatedImage: generatedImageUrl }
+                : m
+            )
+          );
+          assistantContent += `\n\n[Generated Image]`;
+        }
+      }
+
       // Save assistant message
       if (assistantContent) {
         props?.onMessageSaved?.({
@@ -238,6 +327,7 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
   return {
     messages,
     isLoading,
+    isGeneratingImage,
     sendMessage,
     clearMessages,
     setInitialMessages,

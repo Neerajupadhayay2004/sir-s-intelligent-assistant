@@ -1,1 +1,7 @@
 project_id = "dlqgyrwnjjakpscgtyyq"
+
+[functions.jarvis-chat]
+verify_jwt = false
+
+[functions.generate-image]
+verify_jwt = false

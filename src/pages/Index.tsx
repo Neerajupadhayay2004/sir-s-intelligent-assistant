@@ -19,7 +19,7 @@ import { toast } from "sonner";
 const Index = () => {
   const { savedMessages, isInitialized, saveMessage, clearConversation, startNewConversation } = useConversationMemory();
   
-  const { messages, isLoading, sendMessage, clearMessages, setInitialMessages, actionResult } = useJarvisChat({
+  const { messages, isLoading, isGeneratingImage, sendMessage, clearMessages, setInitialMessages, actionResult } = useJarvisChat({
     onMessageSaved: saveMessage,
     initialMessages: savedMessages,
   });
@@ -154,8 +154,8 @@ const Index = () => {
 
   const quickCommands = [
     { text: "Kya haal hai?", icon: "👋" },
+    { text: "Generate an image of a futuristic city", icon: "🎨" },
     { text: "Play music on Spotify", icon: "🎵" },
-    { text: "Search Google for recipes", icon: "🔍" },
     { text: "Open YouTube", icon: "📺" },
   ];
 
@@ -389,8 +389,9 @@ const Index = () => {
                     role={message.role}
                     content={message.content}
                     imageUrl={message.imageUrl}
+                    generatedImage={message.generatedImage}
                     isStreaming={
-                      isLoading &&
+                      (isLoading || isGeneratingImage) &&
                       message.role === "assistant" &&
                       message.id === messages[messages.length - 1].id
                     }
