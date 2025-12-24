@@ -74,6 +74,7 @@ interface UseJarvisChatProps {
 
 interface SendMessageOptions {
   imageData?: string; // Base64 image data
+  style?: string; // Selected art style
 }
 
 // Available art styles
@@ -194,7 +195,26 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
     setActionResult("");
 
     // Check for image generation request
-    const imagePrompt = detectImageGeneration(content);
+    let imagePrompt = detectImageGeneration(content);
+    
+    // If a style was explicitly passed, use it
+    if (options?.style && imagePrompt) {
+      imagePrompt.style = options.style;
+    } else if (options?.style && !imagePrompt) {
+      // If style selected but no image prompt detected, check for simpler patterns
+      const simplePatterns = [
+        /(?:generate|create|draw|make|imagine)\s+(.+)/i,
+        /image of\s+(.+)/i,
+        /picture of\s+(.+)/i,
+      ];
+      for (const pattern of simplePatterns) {
+        const match = content.match(pattern);
+        if (match) {
+          imagePrompt = { prompt: match[1].trim(), style: options.style };
+          break;
+        }
+      }
+    }
 
     // Check for URL/app opening actions
     const action = detectAction(content);
@@ -356,6 +376,56 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
     setMessages(msgs);
   }, []);
 
+  const editImage = useCallback(async (prompt: string, imageUrl: string) => {
+    setIsGeneratingImage(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ 
+            prompt: `Edit this image: ${prompt}`,
+            style: "photorealistic",
+            editImage: imageUrl,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Image editing failed");
+      }
+
+      const data = await response.json();
+      if (data.output) {
+        // Add edited image as new message
+        const editedImageUrl = typeof data.output === "string" 
+          ? data.output 
+          : Array.isArray(data.output) && data.output[0] 
+            ? data.output[0] 
+            : null;
+        
+        if (editedImageUrl) {
+          const editMessage: Message = {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: `Here's your edited image with "${prompt}" applied:`,
+            generatedImage: editedImageUrl,
+          };
+          setMessages((prev) => [...prev, editMessage]);
+          props?.onMessageSaved?.(editMessage);
+        }
+      }
+    } catch (error) {
+      console.error("Image edit error:", error);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  }, [props]);
+
   return {
     messages,
     isLoading,
@@ -364,5 +434,6 @@ export const useJarvisChat = (props?: UseJarvisChatProps) => {
     clearMessages,
     setInitialMessages,
     actionResult,
+    editImage,
   };
 };
