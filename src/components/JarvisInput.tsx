@@ -1,16 +1,19 @@
 import { useState, KeyboardEvent } from "react";
 import { motion } from "framer-motion";
-import { Send, Mic, MicOff, Loader2, Paperclip } from "lucide-react";
+import { Send, Mic, MicOff, Loader2, Paperclip, Palette, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import VoiceWave from "./VoiceWave";
 import { FileUpload } from "./FileUpload";
+import { StyleSelector, ArtStyle } from "./StyleSelector";
 
 interface JarvisInputProps {
-  onSend: (message: string, imageData?: string) => void;
+  onSend: (message: string, imageData?: string, style?: ArtStyle) => void;
   isLoading: boolean;
   isListening: boolean;
   onToggleVoice: () => void;
   onFileSelect?: (file: File, base64?: string) => void;
+  selectedStyle?: ArtStyle | null;
+  onStyleSelect?: (style: ArtStyle) => void;
 }
 
 const JarvisInput = ({
@@ -19,14 +22,17 @@ const JarvisInput = ({
   isListening,
   onToggleVoice,
   onFileSelect,
+  selectedStyle,
+  onStyleSelect,
 }: JarvisInputProps) => {
   const [input, setInput] = useState("");
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showStyleSelector, setShowStyleSelector] = useState(false);
   const [pendingImageData, setPendingImageData] = useState<string | null>(null);
 
   const handleSend = () => {
     if (input.trim() && !isLoading) {
-      onSend(input.trim(), pendingImageData || undefined);
+      onSend(input.trim(), pendingImageData || undefined, selectedStyle || undefined);
       setInput("");
       setPendingImageData(null);
     }
@@ -59,6 +65,14 @@ const JarvisInput = ({
         isOpen={showFileUpload}
         onClose={() => setShowFileUpload(false)}
         onFileSelect={handleFileSelect}
+      />
+
+      {/* Style Selector */}
+      <StyleSelector
+        isOpen={showStyleSelector}
+        onClose={() => setShowStyleSelector(false)}
+        onSelect={(style) => onStyleSelect?.(style)}
+        selectedStyle={selectedStyle || null}
       />
 
       {/* Voice wave indicator */}
@@ -109,12 +123,32 @@ const JarvisInput = ({
           }}
         />
 
+        {/* Style selector button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowStyleSelector(!showStyleSelector)}
+          className={`rounded-xl h-10 w-10 md:h-12 md:w-12 transition-all duration-300 touch-manipulation ${
+            selectedStyle
+              ? "bg-secondary/20 text-secondary ring-2 ring-secondary/50"
+              : "text-muted-foreground hover:text-secondary hover:bg-secondary/10"
+          }`}
+          title="Select Art Style"
+        >
+          <motion.div
+            animate={selectedStyle ? { rotate: [0, 10, -10, 0] } : {}}
+            transition={{ duration: 0.5, repeat: selectedStyle ? Infinity : 0, repeatDelay: 2 }}
+          >
+            <Palette className="w-4 h-4 md:w-5 md:h-5" />
+          </motion.div>
+        </Button>
+
         {/* File attachment button */}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setShowFileUpload(!showFileUpload)}
-          className={`rounded-xl h-10 w-10 md:h-12 md:w-12 transition-all duration-300 ${
+          className={`rounded-xl h-10 w-10 md:h-12 md:w-12 transition-all duration-300 touch-manipulation ${
             showFileUpload
               ? "bg-primary/20 text-primary"
               : "text-muted-foreground hover:text-primary hover:bg-primary/10"
@@ -128,7 +162,7 @@ const JarvisInput = ({
           variant="ghost"
           size="icon"
           onClick={onToggleVoice}
-          className={`rounded-xl h-10 w-10 md:h-12 md:w-12 transition-all duration-300 relative ${
+          className={`rounded-xl h-10 w-10 md:h-12 md:w-12 transition-all duration-300 relative touch-manipulation ${
             isListening
               ? "bg-primary/20 text-primary"
               : "text-muted-foreground hover:text-primary hover:bg-primary/10"

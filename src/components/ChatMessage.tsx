@@ -1,16 +1,17 @@
 import { motion } from "framer-motion";
-import { Bot, User, Image as ImageIcon, Sparkles, Download } from "lucide-react";
+import { Bot, User, Image as ImageIcon, Sparkles, Download, Wand2 } from "lucide-react";
 import { Button } from "./ui/button";
 
-interface ChatMessageProps {
+export interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
   isStreaming?: boolean;
   imageUrl?: string;
   generatedImage?: string;
+  onEditImage?: (imageUrl: string) => void;
 }
 
-const ChatMessage = ({ role, content, isStreaming = false, imageUrl, generatedImage }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, isStreaming = false, imageUrl, generatedImage, onEditImage }: ChatMessageProps) => {
   const isJarvis = role === "assistant";
 
   const handleDownload = async (url: string) => {
@@ -145,16 +146,29 @@ const ChatMessage = ({ role, content, isStreaming = false, imageUrl, generatedIm
                 <span className="text-xs font-medium text-primary-foreground">AI Generated</span>
               </div>
 
-              {/* Download button */}
-              <Button
-                size="sm"
-                variant="secondary"
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => handleDownload(generatedImage)}
-              >
-                <Download className="w-3 h-3 mr-1" />
-                Save
-              </Button>
+              {/* Action buttons */}
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {onEditImage && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => onEditImage(generatedImage)}
+                    className="touch-manipulation"
+                  >
+                    <Wand2 className="w-3 h-3 mr-1" />
+                    Edit
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => handleDownload(generatedImage)}
+                  className="touch-manipulation"
+                >
+                  <Download className="w-3 h-3 mr-1" />
+                  Save
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}

@@ -8,6 +8,7 @@ import StatusIndicator from "@/components/StatusIndicator";
 import HUDOverlay from "@/components/HUDOverlay";
 import FloatingParticles from "@/components/FloatingParticles";
 import { SettingsPanel, defaultSettings, JarvisSettings } from "@/components/SettingsPanel";
+import { ImageEditor } from "@/components/ImageEditor";
 import { useJarvisChat } from "@/hooks/useJarvisChat";
 import { useConversationMemory } from "@/hooks/useConversationMemory";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
@@ -15,11 +16,12 @@ import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { useTheme, ThemeType } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ArtStyle } from "@/components/StyleSelector";
 
 const Index = () => {
   const { savedMessages, isInitialized, saveMessage, clearConversation, startNewConversation } = useConversationMemory();
   
-  const { messages, isLoading, isGeneratingImage, sendMessage, clearMessages, setInitialMessages, actionResult } = useJarvisChat({
+  const { messages, isLoading, isGeneratingImage, sendMessage, clearMessages, setInitialMessages, actionResult, editImage } = useJarvisChat({
     onMessageSaved: saveMessage,
     initialMessages: savedMessages,
   });
@@ -29,6 +31,8 @@ const Index = () => {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<ArtStyle | null>(null);
+  const [editingImage, setEditingImage] = useState<string | null>(null);
   const [settings, setSettings] = useState<JarvisSettings>(() => {
     const saved = localStorage.getItem('jarvis-settings');
     return saved ? JSON.parse(saved) : defaultSettings;
@@ -115,10 +119,11 @@ const Index = () => {
     }
   };
 
-  // Send message with image if one is selected
-  const handleSendMessage = async (content: string, imageData?: string) => {
-    await sendMessage(content, imageData ? { imageData } : undefined);
+  // Send message with image and style if selected
+  const handleSendMessage = async (content: string, imageData?: string, style?: ArtStyle) => {
+    await sendMessage(content, { imageData, style: style || selectedStyle || undefined });
     setSelectedFile(null);
+    // Keep style selected for subsequent generations
   };
 
   const handleExportConversation = () => {
@@ -156,8 +161,14 @@ const Index = () => {
     { text: "Kya haal hai?", icon: "👋" },
     { text: "Generate a cyberpunk image of a neon city", icon: "🌃" },
     { text: "Draw an anime girl with flowers", icon: "🎨" },
+    { text: "Create a fantasy dragon in watercolor style", icon: "🐉" },
     { text: "Open YouTube", icon: "📺" },
   ];
+
+  const handleImageEdit = async (prompt: string, imageUrl: string) => {
+    await editImage(prompt, imageUrl);
+    setEditingImage(null);
+  };
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-background hex-pattern relative overflow-hidden">
@@ -297,6 +308,16 @@ const Index = () => {
           onThemeChange={handleThemeChange}
         />
 
+        {/* Image Editor */}
+        {editingImage && (
+          <ImageEditor
+            isOpen={!!editingImage}
+            onClose={() => setEditingImage(null)}
+            imageUrl={editingImage}
+            onEdit={handleImageEdit}
+          />
+        )}
+
         {/* Chat area */}
         <div className="flex-1 overflow-y-auto py-2 md:py-4 space-y-3 md:space-y-4 scrollbar-thin">
           {messages.length === 0 ? (
@@ -395,6 +416,7 @@ const Index = () => {
                       message.role === "assistant" &&
                       message.id === messages[messages.length - 1].id
                     }
+                    onEditImage={(imageUrl) => setEditingImage(imageUrl)}
                   />
                 </motion.div>
               ))}
@@ -411,6 +433,8 @@ const Index = () => {
             isListening={isListening}
             onToggleVoice={toggleListening}
             onFileSelect={handleFileSelect}
+            selectedStyle={selectedStyle}
+            onStyleSelect={setSelectedStyle}
           />
           <p className="text-center text-[10px] md:text-xs text-muted-foreground mt-2 md:mt-3">
             Press <kbd className="px-1 py-0.5 rounded bg-muted text-primary text-[10px]">Enter</kbd> to send • Click mic for voice • Attach files
