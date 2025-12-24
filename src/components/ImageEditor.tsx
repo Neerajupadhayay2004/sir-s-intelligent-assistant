@@ -152,36 +152,36 @@ export const ImageEditor = ({ isOpen, onClose, imageUrl, onEdit }: ImageEditorPr
             <motion.div 
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="flex items-center justify-between p-4 border-b border-border/30"
+              className="flex items-center justify-between p-3 sm:p-4 border-b border-border/30"
             >
               <div className="flex items-center gap-2">
                 <motion.div
                   animate={{ rotate: [0, 360] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 >
-                  <Wand2 className="w-5 h-5 text-primary" />
+                  <Wand2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </motion.div>
-                <h2 className="text-lg font-bold text-primary tracking-wider">
+                <h2 className="text-sm sm:text-lg font-bold text-primary tracking-wider">
                   Image Editor
                 </h2>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleDownload}
-                  className="text-muted-foreground hover:text-primary"
+                  className="text-muted-foreground hover:text-primary h-8 w-8 sm:h-10 sm:w-10 touch-manipulation"
                 >
-                  <Download className="w-5 h-5" />
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onClose}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="text-muted-foreground hover:text-destructive h-8 w-8 sm:h-10 sm:w-10 touch-manipulation"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               </div>
             </motion.div>
@@ -216,31 +216,31 @@ export const ImageEditor = ({ isOpen, onClose, imageUrl, onEdit }: ImageEditorPr
               <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2"
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 sm:gap-2"
               >
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => handleZoom(0.2)}
-                  className="glass-jarvis rounded-xl h-10 w-10"
+                  className="glass-jarvis rounded-lg sm:rounded-xl h-8 w-8 sm:h-10 sm:w-10 touch-manipulation"
                 >
-                  <ZoomIn className="w-4 h-4" />
+                  <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => handleZoom(-0.2)}
-                  className="glass-jarvis rounded-xl h-10 w-10"
+                  className="glass-jarvis rounded-lg sm:rounded-xl h-8 w-8 sm:h-10 sm:w-10 touch-manipulation"
                 >
-                  <ZoomOut className="w-4 h-4" />
+                  <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleReset}
-                  className="glass-jarvis rounded-xl h-10 w-10"
+                  className="glass-jarvis rounded-lg sm:rounded-xl h-8 w-8 sm:h-10 sm:w-10 touch-manipulation"
                 >
-                  <RotateCcw className="w-4 h-4" />
+                  <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
               </motion.div>
 
@@ -248,10 +248,11 @@ export const ImageEditor = ({ isOpen, onClose, imageUrl, onEdit }: ImageEditorPr
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.5 }}
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 text-xs text-muted-foreground"
+                className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground bg-background/50 backdrop-blur-sm px-2 py-1 rounded-full"
               >
-                <Move className="w-4 h-4" />
-                <span>Drag to pan • Pinch or buttons to zoom</span>
+                <Move className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Drag to pan • Pinch to zoom</span>
+                <span className="xs:hidden">Drag • Pinch</span>
               </motion.div>
             </div>
 
@@ -259,23 +260,22 @@ export const ImageEditor = ({ isOpen, onClose, imageUrl, onEdit }: ImageEditorPr
             <motion.div 
               initial={{ y: 100 }}
               animate={{ y: 0 }}
-              className="p-4 border-t border-border/30 bg-background/80 backdrop-blur-lg"
+              className="p-2 sm:p-4 border-t border-border/30 bg-background/80 backdrop-blur-lg"
             >
-              {/* Quick suggestions */}
-              <div className="flex flex-wrap gap-2 mb-3 justify-center">
+              {/* Quick suggestions - horizontal scroll on mobile */}
+              <div className="flex gap-1.5 sm:gap-2 mb-2 sm:mb-3 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap sm:justify-center scrollbar-thin">
                 {editSuggestions.map((suggestion, i) => (
                   <motion.button
                     key={suggestion.text}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    whileHover={{ scale: 1.05 }}
+                    transition={{ delay: i * 0.03 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setEditPrompt(suggestion.text)}
-                    className="px-3 py-1.5 text-xs rounded-full border border-primary/30 text-primary/80 hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center gap-1.5"
+                    className="flex-shrink-0 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-full border border-primary/30 text-primary/80 active:bg-primary/10 hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center gap-1 sm:gap-1.5 touch-manipulation"
                   >
                     <span>{suggestion.icon}</span>
-                    <span>{suggestion.text}</span>
+                    <span className="whitespace-nowrap">{suggestion.text}</span>
                   </motion.button>
                 ))}
               </div>
@@ -286,19 +286,19 @@ export const ImageEditor = ({ isOpen, onClose, imageUrl, onEdit }: ImageEditorPr
                   type="text"
                   value={editPrompt}
                   onChange={(e) => setEditPrompt(e.target.value)}
-                  placeholder="Describe your edit... (e.g., 'add rain effect')"
-                  className="flex-1 bg-muted/50 border border-border/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  placeholder="Describe your edit..."
+                  className="flex-1 bg-muted/50 border border-border/50 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                   onKeyDown={(e) => e.key === "Enter" && handleEdit()}
                 />
                 <Button
                   onClick={handleEdit}
                   disabled={isEditing || !editPrompt.trim()}
-                  className="px-6 rounded-xl bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30"
+                  className="px-4 sm:px-6 rounded-lg sm:rounded-xl bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30 touch-manipulation"
                 >
                   {isEditing ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   ) : (
-                    <Sparkles className="w-5 h-5" />
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
                 </Button>
               </div>

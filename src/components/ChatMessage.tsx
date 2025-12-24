@@ -137,36 +137,36 @@ const ChatMessage = ({ role, content, isStreaming = false, imageUrl, generatedIm
               <img 
                 src={generatedImage} 
                 alt="AI Generated image" 
-                className="w-full max-h-80 object-contain rounded-xl"
+                className="w-full max-h-60 sm:max-h-80 object-contain rounded-xl"
               />
               
               {/* Label */}
-              <div className="absolute top-2 left-2 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm flex items-center gap-2">
-                <Sparkles className="w-3 h-3 text-primary-foreground" />
-                <span className="text-xs font-medium text-primary-foreground">AI Generated</span>
+              <div className="absolute top-2 left-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-primary/90 backdrop-blur-sm flex items-center gap-1 sm:gap-2">
+                <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground" />
+                <span className="text-[10px] sm:text-xs font-medium text-primary-foreground">AI Generated</span>
               </div>
 
-              {/* Action buttons */}
-              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Action buttons - always visible on mobile */}
+              <div className="absolute top-2 right-2 flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 {onEditImage && (
                   <Button
                     size="sm"
                     variant="secondary"
                     onClick={() => onEditImage(generatedImage)}
-                    className="touch-manipulation"
+                    className="touch-manipulation h-7 sm:h-8 px-2 sm:px-3 text-[10px] sm:text-xs"
                   >
-                    <Wand2 className="w-3 h-3 mr-1" />
-                    Edit
+                    <Wand2 className="w-3 h-3 sm:mr-1" />
+                    <span className="hidden sm:inline">Edit</span>
                   </Button>
                 )}
                 <Button
                   size="sm"
                   variant="secondary"
                   onClick={() => handleDownload(generatedImage)}
-                  className="touch-manipulation"
+                  className="touch-manipulation h-7 sm:h-8 px-2 sm:px-3 text-[10px] sm:text-xs"
                 >
-                  <Download className="w-3 h-3 mr-1" />
-                  Save
+                  <Download className="w-3 h-3 sm:mr-1" />
+                  <span className="hidden sm:inline">Save</span>
                 </Button>
               </div>
             </div>

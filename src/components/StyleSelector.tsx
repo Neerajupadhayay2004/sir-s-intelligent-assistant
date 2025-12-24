@@ -130,19 +130,19 @@ export const StyleSelector = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-8"
+            className="fixed bottom-0 left-0 right-0 z-50 p-2 sm:p-4 pb-6 sm:pb-8 max-h-[70vh] overflow-y-auto"
           >
-            <div className="max-w-2xl mx-auto glass-jarvis rounded-2xl p-4 shadow-jarvis">
+            <div className="max-w-2xl mx-auto glass-jarvis rounded-2xl p-3 sm:p-4 shadow-jarvis">
               {/* Header */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="flex items-center gap-2">
                   <motion.div
                     animate={{ rotate: [0, 360] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                   >
-                    <Sparkles className="w-5 h-5 text-primary" />
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   </motion.div>
-                  <h3 className="text-lg font-bold text-primary tracking-wider">
+                  <h3 className="text-sm sm:text-lg font-bold text-primary tracking-wider">
                     Select Art Style
                   </h3>
                 </div>
@@ -150,20 +150,20 @@ export const StyleSelector = ({
                   variant="ghost"
                   size="icon"
                   onClick={onClose}
-                  className="text-muted-foreground hover:text-primary"
+                  className="text-muted-foreground hover:text-primary h-8 w-8 sm:h-10 sm:w-10"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               </div>
 
               {/* Style Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
+              <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                 {STYLE_OPTIONS.map((style, index) => (
                   <motion.button
                     key={style.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ delay: index * 0.03 }}
                     onTouchStart={() => setHoveredStyle(style.id)}
                     onTouchEnd={() => setHoveredStyle(null)}
                     onMouseEnter={() => setHoveredStyle(style.id)}
@@ -172,28 +172,28 @@ export const StyleSelector = ({
                       onSelect(style.id);
                       onClose();
                     }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                     className={`
-                      relative p-3 rounded-xl transition-all duration-300
+                      relative p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 touch-manipulation
                       ${selectedStyle === style.id 
                         ? "ring-2 ring-primary shadow-glow-md" 
-                        : "ring-1 ring-border/50 hover:ring-primary/50"
+                        : "ring-1 ring-border/50 active:ring-primary/50"
                       }
                     `}
                   >
                     {/* Gradient background */}
                     <motion.div 
-                      className={`absolute inset-0 rounded-xl bg-gradient-to-br ${style.gradient} opacity-20`}
+                      className={`absolute inset-0 rounded-lg sm:rounded-xl bg-gradient-to-br ${style.gradient} opacity-20`}
                       animate={{
                         opacity: hoveredStyle === style.id || selectedStyle === style.id ? 0.4 : 0.2
                       }}
                     />
                     
                     {/* Content */}
-                    <div className="relative z-10 flex flex-col items-center gap-1">
+                    <div className="relative z-10 flex flex-col items-center gap-0.5 sm:gap-1">
                       <motion.span 
-                        className="text-2xl"
+                        className="text-xl sm:text-2xl"
                         animate={{
                           scale: hoveredStyle === style.id ? [1, 1.2, 1] : 1
                         }}
@@ -201,10 +201,10 @@ export const StyleSelector = ({
                       >
                         {style.emoji}
                       </motion.span>
-                      <span className="text-xs font-semibold text-foreground">
+                      <span className="text-[10px] sm:text-xs font-semibold text-foreground">
                         {style.name}
                       </span>
-                      <span className="text-[10px] text-muted-foreground line-clamp-1">
+                      <span className="text-[8px] sm:text-[10px] text-muted-foreground line-clamp-1 hidden xs:block">
                         {style.description}
                       </span>
                     </div>
@@ -213,11 +213,11 @@ export const StyleSelector = ({
                     {selectedStyle === style.id && (
                       <motion.div
                         layoutId="selectedStyle"
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center"
+                        className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-primary rounded-full flex items-center justify-center"
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                       >
-                        <Wand2 className="w-2.5 h-2.5 text-primary-foreground" />
+                        <Wand2 className="w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 text-primary-foreground" />
                       </motion.div>
                     )}
                   </motion.button>
