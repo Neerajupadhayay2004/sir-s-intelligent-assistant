@@ -364,9 +364,9 @@ const Index = () => {
                   Good day, Sir. I am at your service. How may I assist you today?
                 </motion.p>
                 
-                {/* Quick command buttons */}
+                {/* Quick command buttons - horizontal scroll on mobile */}
                 <motion.div 
-                  className="flex flex-wrap justify-center gap-2 mt-4 md:mt-6"
+                  className="flex gap-2 mt-4 md:mt-6 overflow-x-auto pb-2 max-w-full px-2 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-thin"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.7 }}
@@ -376,11 +376,10 @@ const Index = () => {
                         key={cmd.text}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.8 + i * 0.1 }}
-                        whileHover={{ scale: 1.05, boxShadow: "0 0 20px hsl(var(--primary) / 0.3)" }}
+                        transition={{ delay: 0.8 + i * 0.08 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => sendMessage(cmd.text)}
-                        className="px-3 py-2 md:px-4 md:py-2 text-xs md:text-sm rounded-full border border-primary/30 text-primary/80 hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center gap-2"
+                        className="flex-shrink-0 px-2.5 py-1.5 xs:px-3 xs:py-2 md:px-4 md:py-2 text-[10px] xs:text-xs md:text-sm rounded-full border border-primary/30 text-primary/80 active:bg-primary/10 hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center gap-1.5 xs:gap-2 touch-manipulation whitespace-nowrap"
                     >
                       <span>{cmd.icon}</span>
                       <span>{cmd.text}</span>
