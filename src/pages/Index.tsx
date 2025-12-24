@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { ArtStyle } from "@/components/StyleSelector";
 
 const Index = () => {
+  // All hooks at the top - order matters!
   const { savedMessages, isInitialized, saveMessage, clearConversation, startNewConversation } = useConversationMemory();
   
   const { messages, isLoading, isGeneratingImage, sendMessage, clearMessages, setInitialMessages, actionResult, editImage } = useJarvisChat({
@@ -28,6 +29,8 @@ const Index = () => {
   
   const { speak, stop, setRate, setPitch } = useTextToSpeech();
   const { currentTheme, setTheme } = useTheme();
+  
+  // All useState hooks
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -37,25 +40,12 @@ const Index = () => {
     const saved = localStorage.getItem('jarvis-settings');
     return saved ? JSON.parse(saved) : defaultSettings;
   });
+  
+  // All refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<string>("");
 
-  // Load saved messages when initialized
-  useEffect(() => {
-    if (isInitialized && savedMessages.length > 0) {
-      setInitialMessages(savedMessages);
-    }
-  }, [isInitialized, savedMessages, setInitialMessages]);
-
-  // Show action result toast
-  useEffect(() => {
-    if (actionResult) {
-      toast.success(actionResult, {
-        duration: 3000,
-      });
-    }
-  }, [actionResult]);
-
+  // Voice transcript handler - useCallback is a hook
   const handleVoiceTranscript = useCallback(
     (text: string) => {
       if (text.trim()) {
@@ -65,7 +55,23 @@ const Index = () => {
     [sendMessage]
   );
 
+  // useVoiceRecognition hook - always called unconditionally
   const { isListening, toggleListening } = useVoiceRecognition(handleVoiceTranscript);
+
+  // All useEffect hooks
+  useEffect(() => {
+    if (isInitialized && savedMessages.length > 0) {
+      setInitialMessages(savedMessages);
+    }
+  }, [isInitialized, savedMessages, setInitialMessages]);
+
+  useEffect(() => {
+    if (actionResult) {
+      toast.success(actionResult, {
+        duration: 3000,
+      });
+    }
+  }, [actionResult]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
