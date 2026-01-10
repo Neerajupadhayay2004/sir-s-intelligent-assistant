@@ -27,7 +27,7 @@ const Index = () => {
     initialMessages: savedMessages,
   });
   
-  const { speak, stop, setRate, setPitch } = useTextToSpeech();
+  const { speak, stop, isSpeaking, setRate, setPitch, setVolume } = useTextToSpeech();
   const { currentTheme, setTheme } = useTheme();
   
   // All useState hooks
