@@ -308,6 +308,38 @@ const Index = () => {
           </div>
         </motion.header>
 
+        {/* Mobile Speaking Indicator */}
+        <AnimatePresence>
+          {isSpeaking && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="sm:hidden flex justify-center pb-2"
+            >
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30">
+                <motion.div
+                  className="w-1.5 h-1.5 rounded-full bg-primary"
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                  style={{ boxShadow: "0 0 6px hsl(var(--primary))" }}
+                />
+                <div className="flex items-center gap-0.5 h-3">
+                  {[0, 1, 2, 3].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-0.5 rounded-full bg-primary"
+                      animate={{ height: ["6px", "12px", "4px", "10px", "6px"] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.08 }}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] text-primary font-medium tracking-wider ml-1">SPEAKING</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Settings Panel */}
         <SettingsPanel
           isOpen={settingsOpen}
