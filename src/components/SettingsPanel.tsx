@@ -23,6 +23,7 @@ export interface JarvisSettings {
   voiceEnabled: boolean;
   voiceSpeed: number;
   voicePitch: number;
+  voiceId: string;
   language: string;
   colorTheme: ThemeType;
   notificationsEnabled: boolean;
@@ -35,6 +36,7 @@ const defaultSettings: JarvisSettings = {
   voiceEnabled: true,
   voiceSpeed: 1,
   voicePitch: 1,
+  voiceId: '',
   language: 'en-US',
   colorTheme: 'jarvis',
   notificationsEnabled: true,
@@ -51,6 +53,8 @@ interface SettingsPanelProps {
   onClearConversation: () => void;
   onExportConversation: () => void;
   onThemeChange?: (theme: ThemeType) => void;
+  availableVoices?: SpeechSynthesisVoice[];
+  onVoiceChange?: (voice: SpeechSynthesisVoice | null) => void;
 }
 
 const SettingsPanel = ({
@@ -61,6 +65,8 @@ const SettingsPanel = ({
   onClearConversation,
   onExportConversation,
   onThemeChange,
+  availableVoices = [],
+  onVoiceChange,
 }: SettingsPanelProps) => {
   const [localSettings, setLocalSettings] = useState<JarvisSettings>(settings);
 
@@ -167,6 +173,37 @@ const SettingsPanel = ({
                         onCheckedChange={(checked) => updateSetting('autoSpeak', checked)}
                       />
                     </div>
+
+                    {/* Voice Selector */}
+                    {availableVoices.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-sm text-muted-foreground">Voice</Label>
+                        <Select
+                          value={localSettings.voiceId || ''}
+                          onValueChange={(value) => {
+                            updateSetting('voiceId', value);
+                            const voice = availableVoices.find(v => v.voiceURI === value);
+                            onVoiceChange?.(voice || null);
+                          }}
+                        >
+                          <SelectTrigger className="w-full bg-muted/50 border-primary/20">
+                            <SelectValue placeholder="Select voice" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60">
+                            {availableVoices
+                              .filter(v => v.lang.startsWith('en'))
+                              .map((voice) => (
+                                <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
+                                  <span className="flex items-center gap-2">
+                                    <span>{voice.name}</span>
+                                    <span className="text-xs text-muted-foreground">({voice.lang})</span>
+                                  </span>
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">

@@ -7,6 +7,7 @@ import JarvisInput from "@/components/JarvisInput";
 import StatusIndicator from "@/components/StatusIndicator";
 import HUDOverlay from "@/components/HUDOverlay";
 import FloatingParticles from "@/components/FloatingParticles";
+import SpeakingIndicator from "@/components/SpeakingIndicator";
 import { SettingsPanel, defaultSettings, JarvisSettings } from "@/components/SettingsPanel";
 import { ImageEditor } from "@/components/ImageEditor";
 import { useJarvisChat } from "@/hooks/useJarvisChat";
@@ -27,7 +28,7 @@ const Index = () => {
     initialMessages: savedMessages,
   });
   
-  const { speak, stop, isSpeaking, setRate, setPitch, setVolume } = useTextToSpeech();
+  const { speak, stop, isSpeaking, voices, selectedVoice, setSelectedVoice, setRate, setPitch, setVolume } = useTextToSpeech();
   const { currentTheme, setTheme } = useTheme();
   
   // All useState hooks
@@ -256,6 +257,10 @@ const Index = () => {
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
+            <AnimatePresence>
+              <SpeakingIndicator isActive={isSpeaking} className="hidden sm:flex" />
+            </AnimatePresence>
+            
             <StatusIndicator isConnected={true} />
             
             <Button
@@ -312,6 +317,8 @@ const Index = () => {
           onClearConversation={handleClearMessages}
           onExportConversation={handleExportConversation}
           onThemeChange={handleThemeChange}
+          availableVoices={voices}
+          onVoiceChange={setSelectedVoice}
         />
 
         {/* Image Editor */}
